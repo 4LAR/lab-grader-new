@@ -14,6 +14,10 @@ from globals import parse_student_info
 from globals import fix_full_name
 from globals import transform_name_format
 
+from globals import extract_digits
+from globals import fix_full_name
+from globals import all_names_varians
+
 def read_odt(file_path):
     document = OpenDocumentText(file_path)
     paragraphs = []
@@ -51,14 +55,6 @@ async def odt(
     teacher_name_with_space, teacher_name_without_space = transform_name_format(teacher_name)
     teacher_title = lab_config['staff'][0]['title']
     teacher_title_no_spaces = teacher_title.replace(" ", "")
-    
-    print(teacher_name)
-    print(teacher_name)
-    print(teacher_name_with_space)
-    print(teacher_name_without_space)
-
-    print(teacher_title)
-    print(teacher_title_no_spaces)
 
     ############################################################################
 
@@ -89,6 +85,7 @@ async def odt(
     for i, text in enumerate(extracted_text):
         if target_pattern.search(text):
             title_page = extracted_text[:i]
+            title_lower_page = [s.lower() for s in extracted_text[:i]]
             extracted_lower_text = [s.lower() for s in extracted_text[:i]]
             extracted_lower_text = [s.lower() for s in extracted_text[i + 1:]]
             break
@@ -102,6 +99,48 @@ async def odt(
     student_info = parse_student_info(" ".join(title_page))
     print(student_info)
 
+    full_extracted_name = all_names_varians(student_info["student_name"])
+    print(full_extracted_name)
+    full_student_name = fix_full_name(student_fio)
+    print(full_student_name)
+
+    if (extract_digits(student_info["group_number"]) != extract_digits(group_number)):
+        error_list.append("Group numbers do not match")
+
+    if (full_extracted_name != full_student_name):
+        error_list.append("Student name do not match")
+
+    for teacher in [teacher_name, teacher_name_with_space, teacher_name_without_space]:
+        find_flag = False
+        for line in title_lower_page:
+            if line.find(teacher.lower()) != -1:
+                find_flag = True
+                break
+        if not find_flag:
+            error_list.append("No teacher's name")
+            break
+
+    for title in [teacher_title, teacher_title_no_spaces]:
+        find_flag = False
+        for line in title_lower_page:
+            if line.find(title.lower()) != -1:
+                find_flag = True
+                break
+        if not find_flag:
+            error_list.append("No teacher's title")
+            break
+
+    # for teacher in [teacher_name, teacher_name_with_space, teacher_name_without_space]:
+    #     find_flag = False
+    #     for line in title_lower_page:
+    #         if line.find(teacher.lower()) != -1:
+    #             find_flag = True
+    #             break
+    #     if not find_flag:
+    #         error_list.append("No student name")
+
+    ############################################################################
+
     # проверяем основной отчёт (заголовки)
     for report in reports:
         find_flag = False
@@ -110,9 +149,12 @@ async def odt(
                 find_flag = True
                 break
         if not find_flag:
-            error_list.append(report)
+            error_list.append("Not found in report: " + report)
 
     # os.remove(file.filename)
 
     # return {"checklist": reports, "errors": error_list, "title": title_page, "body": extracted_text}
-    return {"checklist": reports, "errors": error_list}
+    if len(error_list) > 0:
+        raise HTTPException(status_code=400, detail=error_list)
+
+    return {"result": "The report is correct"}

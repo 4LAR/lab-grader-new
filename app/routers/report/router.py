@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from .odt import odt
 
 report_router = APIRouter(
+    prefix="/report",
     tags=["Report"]
 )
 

@@ -7,6 +7,15 @@ config.print()
 
 ################################################################################
 
+# import gspread
+# from oauth2client.service_account import ServiceAccountCredentials
+
+# scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+# credentials = ServiceAccountCredentials.from_json_keyfile_name('gconfig.json', scope)
+# gc = gspread.authorize(credentials)
+
+################################################################################
+
 import re
 
 #
@@ -16,18 +25,20 @@ def all_names_varians(name):
 
     # Проверка форматов имен
     patterns = [
-        r'([А-ЯЁA-Z])\.([А-ЯЁA-Z])\.([А-ЯЁA-Z][а-яёa-z]+)',  # "И.О.Фамилия"
         r'([А-ЯЁA-Z][а-яёa-z]+)([А-ЯЁA-Z])\.([А-ЯЁA-Z])\.',  # "ФамилияИ.О."
-        r'([А-ЯЁA-Z])\.([А-ЯЁA-Z])\.([А-ЯЁA-Z][а-яёa-z]+)',  # "И.О. Фамилия" (с пробелом)
-        r'([А-ЯЁA-Z][а-яёa-z]+) ([А-ЯЁA-Z])\.([А-ЯЁA-Z])\.'   # "Фамилия И.О." (с пробелом)
+        r'([А-ЯЁA-Z][а-яёa-z]+) ([А-ЯЁA-Z])\.([А-ЯЁA-Z])\.',  # "Фамилия И.О."
+        r'([А-ЯЁA-Z])\.([А-ЯЁA-Z])\.([А-ЯЁA-Z][а-яёa-z]+)',  # "И.О.Фамилия"
+        r'([А-ЯЁA-Z])\.([А-ЯЁA-Z])\. ([А-ЯЁA-Z][а-яёa-z]+)'   # "И.О. Фамилия"
     ]
 
     for pattern in patterns:
         match = re.match(pattern, name)
         if match:
-            initials = f"{match.group(1)}.{match.group(2)}."
-            surname = match.group(3)
-            return f"{surname} {initials}"
+            if len(match.groups()) == 3:
+                surname = match.group(1)
+                initial1 = match.group(2)
+                initial2 = match.group(3)
+                return f"{surname} {initial1}.{initial2}."
 
     # Если ни один формат не подошел, возвращаем исходное имя
     return name
@@ -65,6 +76,22 @@ def transform_name_format(name):
     if len(parts) == 2:
         return f"{parts[1]} {parts[0]}", f"{parts[1]}{parts[0]}"
     return name, name
+
+################################################################################
+
+def extract_digits(input_string):
+    return ''.join(filter(str.isdigit, input_string))
+
+################################################################################
+
+def verify_student_registration(spreadsheet_id, student_name, group_name):
+    try:
+        # Открытие листа группы
+        sheet = gc.open_by_key(spreadsheet_id).worksheet(group_name)
+        # Проверка наличия имени студента в списке
+        return student_name in sheet.col_values(2)
+    except gspread.exceptions.WorksheetNotFound:
+        return False
 
 ################################################################################
 
