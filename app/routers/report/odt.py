@@ -109,26 +109,28 @@ async def odt(
 
     if (full_extracted_name != full_student_name):
         error_list.append("Student name do not match")
-
+    # print([teacher_name, teacher_name_with_space, teacher_name_without_space])
+    # print([teacher_title, teacher_title_no_spaces])
+    # print(title_lower_page)
+    find_flag = False
     for teacher in [teacher_name, teacher_name_with_space, teacher_name_without_space]:
-        find_flag = False
         for line in title_lower_page:
             if line.find(teacher.lower()) != -1:
                 find_flag = True
                 break
-        if not find_flag:
-            error_list.append("No teacher's name")
-            break
+    if not find_flag:
+        error_list.append("No teacher's name")
+        # break
 
+    find_flag = False
     for title in [teacher_title, teacher_title_no_spaces]:
-        find_flag = False
         for line in title_lower_page:
             if line.find(title.lower()) != -1:
                 find_flag = True
                 break
-        if not find_flag:
-            error_list.append("No teacher's title")
-            break
+    if not find_flag:
+        error_list.append("No teacher's title")
+        # break
 
     # for teacher in [teacher_name, teacher_name_with_space, teacher_name_without_space]:
     #     find_flag = False
