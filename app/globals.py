@@ -7,12 +7,7 @@ config.print()
 
 ################################################################################
 
-# import gspread
-# from oauth2client.service_account import ServiceAccountCredentials
 
-# scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-# credentials = ServiceAccountCredentials.from_json_keyfile_name('gconfig.json', scope)
-# gc = gspread.authorize(credentials)
 
 ################################################################################
 
@@ -84,14 +79,7 @@ def extract_digits(input_string):
 
 ################################################################################
 
-def verify_student_registration(spreadsheet_id, student_name, group_name):
-    try:
-        # Открытие листа группы
-        sheet = gc.open_by_key(spreadsheet_id).worksheet(group_name)
-        # Проверка наличия имени студента в списке
-        return student_name in sheet.col_values(2)
-    except gspread.exceptions.WorksheetNotFound:
-        return False
+
 
 ################################################################################
 
